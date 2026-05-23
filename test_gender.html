@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Твій Cambridge Code</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    color: #1a237e;
+}
+
+/* Стартовий екран */
+#start-screen {
+    text-align: center;
+    padding-top: 50px;
+    min-height: 100vh;
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-start; 
+    align-items: center;
+    background: url('back.png') no-repeat center center fixed;
+    background-size: cover;
+}
+#start-screen img {
+    max-width: 200px; 
+    height: auto;
+    margin-bottom: 20px;
+}
+#start-screen .title div { line-height: 1.2; }
+#start-screen .title .small { font-size:32px; font-weight:normal; }
+#start-screen .title .large { font-size:48px; font-weight:bold; }
+#start-screen button {
+    background-color:#1a237e;
+    color:white;
+    border:none;
+    border-radius:12px;
+    padding:15px 40px;
+    font-size:18px;
+    margin-top:30px;
+    cursor:pointer;
+}
+#start-screen button:hover { background-color:#16236f; }
+
+/* Розділ тесту */
+#quiz-container {
+  display: none;
+  min-height: 100vh;
+  background-color: #f7f0e6;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.question {
+  text-align: center;
+  margin-bottom: 30px;
+  width: 90%;
+  max-width: 600px;
+}
+.question p {
+  color: #1a237e;
+  font-weight: bold;
+  font-size: clamp(20px, 4vw, 28px);
+  margin-bottom: 20px;
+}
+.question button {
+  display:block;
+  margin:10px auto;
+  padding:15px 30px;
+  width:80%;
+  max-width:400px;
+  border: 2px solid #9b6a0f;
+  border-radius:12px;
+  background-color:#f7f0e6;
+  color:#93681a;
+  font-size: clamp(16px, 2.5vw, 18px);
+  cursor:pointer;
+  transition: background-color 0.3s;
+}
+.question button:hover { background-color:#dbceb9; }
+
+/* Результати тесту */
+.result {
+  display:none;
+  margin-top:30px;
+  padding:20px;
+  background:#f7f0e6;
+  border-radius:8px;
+  text-align:center;
+  color:#1a237e;
+}
+.result button {
+    background-color:#1a237e;
+    color:white;
+    border:none;
+    border-radius:12px;
+    padding:15px 40px;
+    font-size:18px;
+    margin-top:30px;
+    cursor:pointer;
+}
+.result button:hover { background-color:#16236f; }
+.ticket img { width:100%; max-width:1386px; height:auto; }
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="start-screen">
+  <img src="LogoCam.png" alt="Cambridge Logo">
+  <div class="title">
+    <div class="small">твій</div>
+    <div class="large">CAMBRIDGE</div>
+    <div class="large">CODE</div>
+  </div>
+  <button onclick="startQuiz()">Почати тест</button>
+</div>
+
+<!-- QUIZ CONTAINER -->
+<div id="quiz-container"></div>
+
+<!-- RESULT -->
+<div class="result" id="result">
+  <h2 id="type-title"></h2>
+  <p id="type-desc"></p>
+  <div class="ticket">
+    <img id="student-ticket" src="" alt="Студентський квиток">
+  </div>
+  <button onclick="restartTest()">Спробувати ще раз</button>
+</div>
+
+<script>
+// Питання тесту
+const questions = [
+  {q:"Ваша стать?", A:"Хлопець", B:"Дівчина", C:null},
+  {q:"1. Твій ідеальний робочий простір?", A:"Місце, де всі генерують ідеї разом", B:"Тихий кабінет з трьома моніторами та графіками", C:"Будь-яка точка світу з ноутбуком і Starlink"},
+  {q:"2. Що ти зробиш із подарованими 10 000 грн?", A:"Вкладу в розробку власної корисної програми", B:"Куплю акції відомої компанії", C:"Спробую «зловити» ріст нового перспективного токена"},
+  {q:"3. У командній грі ти...", A:"Капітан, що приймає рішення", B:"Аналітик, що прораховує кроки ворога", C:"Гравець-одинак, що діє непередбачувано"},
+  {q:"4. Твоя мета через 10 років:", A:"Своя компанія (вартістю $1 млрд)", B:"Висока посада в інвестиційному банку", C:"Повна фінансова незалежність і пасивний дохід"},
+  {q:"5. Як ти ставишся до помилок?", A:"Це частина навчання, йдемо далі", B:"Помилка — неправильний розрахунок, треба все перевірити", C:"Помилка — це втрачені гроші, треба відігратися"},
+  {q:"6. Що тебе більше бісить?", A:"Повільність і бюрократія", B:"Хаос і нелогічність", C:"Заборона на ризик"},
+  {q:"7. Твоє хобі впливає на кар’єру?", A:"Воно надихає створювати стартапи", B:"Розвиває логіку та аналітику", C:"Дає креативні ідеї для нових цифрових продуктів"},
+  {q:"8. Який стиль навчання тобі ближчий?", A:"Практичний, пробую і роблю", B:"Теоретичний, планую і аналізую", C:"Експериментую і імпровізую"},
+  {q:"9. Як ти приймаєш рішення?", A:"Інтуїтивно та швидко", B:"Після ретельного аналізу", C:"Спробую і подивлюся, що вийде"},
+  {q:"10. Твоє ставлення до ризику?", A:"Люблю ризикувати для нових ідей", B:"Обережний і планую кожен крок", C:"Вибираю високі винагороди, навіть якщо ризик великий"}
+];
+
+let scores = {A:0, B:0, C:0};
+let currentQuestion = 0;
+let gender = null;
+
+function startQuiz(){
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('quiz-container').style.display='flex';
+  showQuestion();
+}
+
+function showQuestion(){
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = "";
+  if(currentQuestion >= questions.length){ showResult(); return; }
+  const q = questions[currentQuestion];
+  const div = document.createElement('div');
+  div.className = "question";
+  
+  if(currentQuestion === 0){
+    // Питання про стать
+    div.innerHTML = `<p>${q.q}</p>
+      <button onclick="answer('A')">${q.A}</button>
+      <button onclick="answer('B')">${q.B}</button>`;
+  } else {
+    div.innerHTML = `<p>${q.q}</p>
+      <button onclick="answer('A')">A) ${q.A}</button>
+      <button onclick="answer('B')">B) ${q.B}</button>
+      <button onclick="answer('C')">C) ${q.C}</button>`;
+  }
+  container.appendChild(div);
+}
+
+function answer(choice){
+  if(currentQuestion === 0){
+    gender = (choice==='A') ? 'male' : 'female';
+  } else {
+    scores[choice]++;
+  }
+  currentQuestion++;
+  showQuestion();
+}
+
+function showResult(){
+  document.getElementById('quiz-container').style.display='none';
+  const resultDiv = document.getElementById('result');
+  resultDiv.style.backgroundColor = '#f7f0e6';
+  resultDiv.style.color = '#1a237e';
+  
+  const maxScore = Math.max(scores.A, scores.B, scores.C);
+  let type="", desc="", img="";
+  
+  if(maxScore===scores.A){
+    type="INNOVATOR (Стартапер)";
+    desc="Твій шлях — створення нових продуктів. Тобі потрібно вчитися, як не спалити гроші інвесторів і масштабувати ідеї.";
+    img = (gender==='female') ? "student1_female.png" : "student1_male.png";
+  } else if(maxScore===scores.B){
+    type="STRATEGIST (Фінансовий аналітик / Еко-інвестор)";
+    desc="Ти бачиш структуру світу. Тобі потрібно вивчати ринки акцій та «зелені» технології.";
+    img = (gender==='female') ? "student2_female.png" : "student2_male.png";
+  } else {
+    type="VISIONARY (Криптотрейдер / Маркетолог)";
+    desc="Ти відчуваєш хайп і знаєш, як на ньому заробити. Твій курс — цифрові активи та психологія мас.";
+    img = (gender==='female') ? "student3_female.png" : "student3_male.png";
+  }
+  
+  document.getElementById('type-title').innerText = type;
+  document.getElementById('type-desc').innerText = desc;
+  document.getElementById('student-ticket').src = img;
+  resultDiv.style.display = 'block';
+}
+
+function restartTest(){
+  scores = {A:0, B:0, C:0};
+  currentQuestion = 0;
+  gender = null;
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('quiz-container').style.display = 'flex';
+  showQuestion();
+}
+</script>
